@@ -50,7 +50,7 @@ int check_heatpower (int heat)
 int heat2pwm (int heat)
 {
   heat = check_heatpower(heat2);
-  return heat / MAX_LOAD_POWER * PWM_RANGE;  
+  return heat * PWM_RANGE / MAX_LOAD_POWER;  
 }
 
 
