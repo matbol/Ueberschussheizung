@@ -38,19 +38,19 @@ void pwm_setup(void)
 }
 
 
-int check_heatpower (int heat2pwm)
+int check_heatpower (int heat)
 {
   if (heat2pwm > MAX_LOAD_POWER)
   {
     return MAX_LOAD_POWER;
   }
-  return heat2pwm;
+  return heat;
 }
 
-int heat2pwm (int heat2pwm)
+int heat2pwm (int heat)
 {
-  heat2pwm = check_heatpower(heat2pwm);
-  return heat2pwm / MAX_LOAD_POWER * PWM_RANGE;  
+  heat = check_heatpower(heat2pwm);
+  return heat / MAX_LOAD_POWER * PWM_RANGE;  
 }
 
 
