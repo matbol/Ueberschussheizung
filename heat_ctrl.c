@@ -13,17 +13,17 @@ Der Heizstab hat eine maximale Leistung von 3 kW.
 #include <stdlib.h>
 #include <stdint.h>
 
-
-#define PWM_PIN01 = 1
-#define MAX_LOAD_POWER = 3000
-#define PWM_CLK = 4
-#define MAIN_FREQ = 192000000
-#define PWM_RANGE = 512
+//WiringPI Pin 1 or GPIO 18
+#define PWM_PIN01 1
+#define MAX_LOAD_POWER 3000
+#define PWM_CLK 4
+#define MAIN_FREQ 192000000
+#define PWM_RANGE 512
 
 
 void pwm_setup(void);
-int check_heatpower (int heat2pwm);
-int heat2pwm (int heat2pwm);
+int check_heatpower (int heat);
+int heat2pwm (int heat);
 
 void pwm_setup(void)
 {
@@ -34,13 +34,13 @@ void pwm_setup(void)
   pwmSetClock (MAIN_FREQ / PWM_RANGE / PWM_CLK);
   pwmSetRange (PWM_RANGE);
  
-  return 0;
+  return;
 }
 
 
 int check_heatpower (int heat)
 {
-  if (heat2pwm > MAX_LOAD_POWER)
+  if (heat > MAX_LOAD_POWER)
   {
     return MAX_LOAD_POWER;
   }
@@ -49,9 +49,19 @@ int check_heatpower (int heat)
 
 int heat2pwm (int heat)
 {
-  heat = check_heatpower(heat2);
+  heat = check_heatpower(heat);
   return heat * PWM_RANGE / MAX_LOAD_POWER;  
 }
 
 
 
+int main()
+{
+  pwm_setup();
+  for (int index=0; index<10; index++)
+    {
+      printf("%i\n", index);
+      pwmWrite(PWM_PIN01, 256);
+    }
+  return 0;
+}
