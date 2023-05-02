@@ -13,6 +13,7 @@ Der Heizstab hat eine maximale Leistung von 3 kW.
 */
 
 #include <wiringPi.h>
+#include "microjson/mjson.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +30,7 @@ Der Heizstab hat eine maximale Leistung von 3 kW.
 void pwm_setup(void);
 int check_heatpower (int heat);
 int heat2pwm (int heat);
-char actual_power_json[] = "{\"version\":\"0.3\",\"data\":{\"tuples\":[[1682965855511,468,1]],\"uuid\":\"cba86870-dd59-11ed-81fe-8b6b00f83eed\",\"from\":1682965854509,\"to\":1682965855511,\"min\":[1682965855511,468],\"max\":[1682965855511,468],\"average\":468,\"consumption\":0.13,\"rows\":2}}"
+char actual_power_json[] = "{\"version\":\"0.3\",\"data\":{\"tuples\":[[1682965855511,468,1]],\"uuid\":\"cba86870-dd59-11ed-81fe-8b6b00f83eed\",\"from\":1682965854509,\"to\":1682965855511,\"min\":[1682965855511,468],\"max\":[1682965855511,468],\"average\":468,\"consumption\":0.13,\"rows\":2}}";
 
 void pwm_setup(void)
 {
@@ -64,10 +65,10 @@ int heat2pwm (int heat)
 int main()
 {
   pwm_setup();
-  for (int index=0; index<10; index++)
+  for (;;)
     {
-      printf("%i\n", index);
-      pwmWrite(PWM_PIN01, 256);
+//      printf("%i\n", index);
+      pwmWrite(PWM_PIN01, 200);
     }
   return 0;
 }
