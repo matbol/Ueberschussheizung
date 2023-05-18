@@ -15,6 +15,7 @@ Der Heizstab hat eine maximale Leistung von 3 kW.
 #include <wiringPi.h>
 #include "microjson/mjson.h"
 
+#include <curl/curl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -65,21 +66,75 @@ int heat2pwm (int heat)
   return heat * PWM_RANGE / MAX_LOAD_POWER;
 }
 
-int extract_json(const char *regex, const char *String);
+int extract_json(const char *regex, char *String);
+
+
+struct MemoryStruct {
+  char *memory;
+  size_t size;
+};
+
+
+static size_t
+WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+  size_t realsize = size * nmemb;
+  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+  mem->memory = realloc(mem->memory, mem->size + realsize + 1);
+  if(mem->memory == NULL) {
+    printf("not enough memory (realloc returned NULL)\n");    return 0;
+	}
+
+  memcpy(&(mem->memory[mem->size]), contents, realsize);
+  mem->size += realsize;
+  mem->memory[mem->size] = 0;
+  return realsize;
+}
+
+
+
 
 int main()
 {
   pwm_setup();
   int measured_power = 0;
-  for (;;)
-    {
+//  for (int i=0;i<1;i++)
+//    {
 //      printf("%i\n", index);
-      measured_power = extract_json(regexString, actual_json_string);
-      pwmWrite(PWM_PIN01, 200);
-    }
-  return 0;
-}
+//	measured_power = extract_json(regexString, source);
+//	printf("Measured Power:\t%i\n", measured_power); 
+	pwmWrite(PWM_PIN01, 200);
 
+	 CURL *curl_handle;
+	 CURLcode res;
+
+	struct MemoryStruct chunk;
+	chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */
+	chunk.size = 0;    /* no data at this point */
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl_handle = curl_easy_init(); 
+	curl_easy_setopt(curl_handle, CURLOPT_URL, "http://192.168.178.60:8080/data/cba86870-dd59-11ed-81fe-8b6b00f83eed.json");
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+
+	res = curl_easy_perform(curl_handle);
+	if(res != CURLE_OK) {
+		fprintf(stderr, "curl_easy_perform() failed: %s\n",
+		curl_easy_strerror(res));
+	}
+  else {
+    printf("%lu bytes retrieved\n", (long)chunk.size);
+		measured_power = extract_json(regexString, chunk.memory);
+		printf("Incoming String:\t%s\n", chunk.memory);
+		printf("Measured Power:\t%i\n", measured_power);
+	}
+	curl_easy_cleanup(curl_handle);
+	free(chunk.memory);
+	curl_global_cleanup();
+	return 0;
+}
 
 
 
@@ -100,7 +155,7 @@ int main()
 /*
 * Quelle: https://gist.github.com/ianmackinnon/3294587
 */
-int extract_json(const char *regex, const char *String){
+int extract_json(const char *regex, char *String){
   size_t maxMatches = 1;
   size_t maxGroups = 2;
 
@@ -115,17 +170,18 @@ int extract_json(const char *regex, const char *String){
     };
 
   m = 0;
-  cursor = source;
+  cursor = String;
   if (regexec(&regexCompiled, cursor, maxGroups, groupArray, 0))
   {
       return 1;
   }
     char *result ="";
-    int = num_result = 0;
+    int num_result = 0;
     char cursorCopy[strlen(cursor) + 1];
     strcpy(cursorCopy, cursor);
     cursorCopy[groupArray[1].rm_eo] = 0;
     result = cursorCopy + groupArray[1].rm_so;
+    printf("Extract Json:\t%s\n", result);
     num_result = atoi(result);   
 
 
