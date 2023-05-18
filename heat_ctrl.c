@@ -15,6 +15,7 @@ Der Heizstab hat eine maximale Leistung von 3 kW.
 #include <wiringPi.h>
 #include "microjson/mjson.h"
 
+#include <unistd.h>
 #include <curl/curl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -98,8 +99,8 @@ int main()
 {
   pwm_setup();
   int measured_power = 0;
-//  for (int i=0;i<1;i++)
-//    {
+  for (;;)
+    {
 //      printf("%i\n", index);
 //	measured_power = extract_json(regexString, source);
 //	printf("Measured Power:\t%i\n", measured_power); 
@@ -133,6 +134,10 @@ int main()
 	curl_easy_cleanup(curl_handle);
 	free(chunk.memory);
 	curl_global_cleanup();
+
+
+usleep(1000000);	
+}
 	return 0;
 }
 
@@ -181,7 +186,7 @@ int extract_json(const char *regex, char *String){
     strcpy(cursorCopy, cursor);
     cursorCopy[groupArray[1].rm_eo] = 0;
     result = cursorCopy + groupArray[1].rm_so;
-    printf("Extract Json:\t%s\n", result);
+//    printf("Extract Json:\t%s\n", result);
     num_result = atoi(result);   
 
 
