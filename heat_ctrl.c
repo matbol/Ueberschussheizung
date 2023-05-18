@@ -36,7 +36,7 @@ int check_heatpower (int heat);
 int heat2pwm (int heat);
 
 char *source = "{\"version\":\"0.3\",\"data\":{\"tuples\":[[1682965855511,468,1]],\"uuid\":\"cba86870-dd59-11ed-81fe-8b6b00f83eed\",\"from\":1682965854509,\"to\":1682965855511,\"min\":[1682965855511,468],\"max\":[1682965855511,468],\"average\":468,\"consumption\":0.13,\"rows\":2}}";
-const char * regexString =  "tuples\":\[\[[0-9]*,([0-9]*)";
+const char * regexString =  "tuples\":\[\[[0-9]*,(.[0-9]*)";
 
 void pwm_setup(void)
 {
