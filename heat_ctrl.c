@@ -40,7 +40,7 @@ const char * regexString =  "tuples\":\[\[[0-9]*,(.[0-9]*)";
 
 void pwm_setup(void)
 {
-  if (wiringPiSetupGpio() == -1)
+  if (wiringPiSetup() == -1)
     exit (1) ;
 
   pinMode (PWM_PIN01, PWM_OUTPUT);
