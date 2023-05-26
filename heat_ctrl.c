@@ -13,7 +13,7 @@ Der Heizstab hat eine maximale Leistung von 3 kW.
 */
 
 #include <wiringPi.h>
-#include "microjson/mjson.h"
+//#include "microjson/mjson.h"
 
 #include <unistd.h>
 #include <curl/curl.h>
@@ -36,8 +36,8 @@ void pwm_setup(void);
 int check_heatpower (int heat);
 int heat2pwm (int heat);
 
-char *source = "{\"version\":\"0.3\",\"data\":{\"tuples\":[[1682965855511,468,1]],\"uuid\":\"cba86870-dd59-11ed-81fe-8b6b00f83eed\",\"from\":1682965854509,\"to\":1682965855511,\"min\":[1682965855511,468],\"max\":[1682965855511,468],\"average\":468,\"consumption\":0.13,\"rows\":2}}";
-const char * regexString =  "tuples\":\[\[[0-9]*,(.[0-9]*)";
+//char *source = "{\"version\":\"0.3\",\"data\":{\"tuples\":[[1682965855511,468,1]],\"uuid\":\"cba86870-dd59-11ed-81fe-8b6b00f83eed\",\"from\":1682965854509,\"to\":1682965855511,\"min\":[1682965855511,468],\"max\":[1682965855511,468],\"average\":468,\"consumption\":0.13,\"rows\":2}}";
+const char * regexString =  "tuples\": \[ \[ [0-9]*, (.[0-9]*)";
 
 void pwm_setup(void)
 {
@@ -54,11 +54,19 @@ void pwm_setup(void)
 
 int check_heatpower (int heat)
 {
+  if (heat >= 0)
+	{
+	return 0;
+	}
+  else
+  {
+  heat = -heat;
+  }
   if (heat > MAX_LOAD_POWER)
   {
-    return MAX_LOAD_POWER;
+    return (MAX_LOAD_POWER);
   }
-  return heat;
+  return (heat);
 }
 
 int heat2pwm (int heat)
@@ -99,12 +107,9 @@ int main()
 {
   pwm_setup();
   int measured_power = 0;
+  int pwm_value = 0;
   for (;;)
     {
-//      printf("%i\n", index);
-//	measured_power = extract_json(regexString, source);
-//	printf("Measured Power:\t%i\n", measured_power); 
-	pwmWrite(PWM_PIN01, 200);
 
 	 CURL *curl_handle;
 	 CURLcode res;
@@ -114,7 +119,7 @@ int main()
 	chunk.size = 0;    /* no data at this point */
 	curl_global_init(CURL_GLOBAL_ALL);
 	curl_handle = curl_easy_init(); 
-	curl_easy_setopt(curl_handle, CURLOPT_URL, "http://192.168.178.60:8080/data/cba86870-dd59-11ed-81fe-8b6b00f83eed.json");
+	curl_easy_setopt(curl_handle, CURLOPT_URL, "http://192.168.178.60:8081/cba86870-dd59-11ed-81fe-8b6b00f83eed");
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
 	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
@@ -125,18 +130,18 @@ int main()
 		fprintf(stderr, "curl_easy_perform() failed: %s\n",
 		curl_easy_strerror(res));
 	}
-  else {
-    printf("%lu bytes retrieved\n", (long)chunk.size);
+    else {
 		measured_power = extract_json(regexString, chunk.memory);
-		printf("Incoming String:\t%s\n", chunk.memory);
-		printf("Measured Power:\t%i\n", measured_power);
+		pwm_value = heat2pwm(measured_power);
+		printf("Measured Power, PWM:\t%i\t%i\n\n", measured_power, pwm_value);
+		pwmWrite(PWM_PIN01, pwm_value);
 	}
 	curl_easy_cleanup(curl_handle);
 	free(chunk.memory);
 	curl_global_cleanup();
 
 
-usleep(1000000);	
+        usleep(1000000);	
 }
 	return 0;
 }
