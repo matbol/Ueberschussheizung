@@ -45,6 +45,7 @@ void pwm_setup(void)
     exit (1) ;
 
   pinMode (PWM_PIN01, PWM_OUTPUT);
+  pwmSetMode (PWM_MODE_MS);  //https://raspberrypi.stackexchange.com/questions/4906/control-hardware-pwm-frequency
   pwmSetClock (MAIN_FREQ / PWM_RANGE / PWM_CLK);
   pwmSetRange (PWM_RANGE);
 
