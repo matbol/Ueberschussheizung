@@ -30,7 +30,7 @@ Der Heizstab hat eine maximale Leistung von 3 kW.
 #define PWM_CLK 3
 #define MAIN_FREQ 192000000
 #define PWM_RANGE 1024
-#define POWER_OFFSET 0
+#define POWER_OFFSET 300
 
 void pwm_setup(void);
 int check_heatpower (int heat);
