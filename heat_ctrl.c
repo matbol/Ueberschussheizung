@@ -63,15 +63,15 @@ int pid_ctrl (int error)
   static int esum = 0;
   static int ealt = 0;
   int y = 0;
-  if (error < 3000 && error > 0)
+  if (esum < 3000 && esum > 0)
   {
     esum = esum + error;   
   }
-  
+//printf("%i\n", esum);  
   y = CTRL_KP * error 
     + CTRL_KI * CTRL_TA * esum 
     + CTRL_KD/CTRL_TA * (error - ealt);
-  ealt = e;
+  ealt = error;
 
 }
 
@@ -158,7 +158,7 @@ int main()
     else {
 		measured_power = extract_json(regexString, chunk.memory);
 		measured_power =  pid_ctrl(measured_power);
-    pwm_value = heat2pwm(measured_power);
+    		pwm_value = heat2pwm(measured_power);
 //		printf("Measured Power, PWM:\t%i\t%i\n\n", measured_power, pwm_value);
 
 		pwmWrite(PWM_PIN01, pwm_value);
