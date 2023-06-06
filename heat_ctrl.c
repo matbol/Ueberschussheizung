@@ -52,6 +52,8 @@ void pwm_setup(void)
 }
 
 
+int pid_ctrl (int )
+
 int check_heatpower (int heat)
 {
   if (heat >= 0)
