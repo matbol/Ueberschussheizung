@@ -32,6 +32,12 @@ Der Heizstab hat eine maximale Leistung von 3 kW.
 #define PWM_RANGE 1024
 #define POWER_OFFSET 300
 
+#define CTRL_KP 1
+#define CTRL_KI 0
+#define CTRL_KD 0
+#define CTRL_TA 1
+
+
 void pwm_setup(void);
 int check_heatpower (int heat);
 int heat2pwm (int heat);
@@ -52,7 +58,23 @@ void pwm_setup(void)
 }
 
 
-int pid_ctrl (int )
+int pid_ctrl (int error)
+{
+  static int esum = 0;
+  static int ealt = 0;
+  int y = 0;
+  if (error < 3000 && error > 0)
+  {
+    esum = esum + error;   
+  }
+  
+  y = CTRL_KP * error 
+    + CTRL_KI * CTRL_TA * esum 
+    + CTRL_KD/CTRL_TA * (error - ealt);
+  ealt = e;
+
+}
+
 
 int check_heatpower (int heat)
 {
@@ -135,8 +157,10 @@ int main()
 	}
     else {
 		measured_power = extract_json(regexString, chunk.memory);
-		pwm_value = heat2pwm(measured_power);
+		measured_power =  pid_ctrl(measured_power);
+    pwm_value = heat2pwm(measured_power);
 //		printf("Measured Power, PWM:\t%i\t%i\n\n", measured_power, pwm_value);
+
 		pwmWrite(PWM_PIN01, pwm_value);
 	}
 	curl_easy_cleanup(curl_handle);
