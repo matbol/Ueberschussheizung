@@ -51,6 +51,7 @@ void pwm_setup(void)
   return;
 }
 
+int rueckspeise_wert(int pr);
 
 int check_heatpower (int heat)
 {
@@ -133,7 +134,9 @@ int main()
 	}
     else {
 		measured_power = extract_json(regexString, chunk.memory);
-		pwm_value = heat2pwm(measured_power);
+		pwm_value = rueckspeise_wert(measured_power);
+		
+		//pwm_value = heat2pwm(measured_power);
 //		printf("Measured Power, PWM:\t%i\t%i\n\n", measured_power, pwm_value);
 		pwmWrite(PWM_PIN01, pwm_value);
 	}
@@ -154,7 +157,27 @@ int main()
 
 
 
+//pz = zugeschaltete Leistung (Heizstab)
+//pr = rückgespeiste Leistung (Messwert am Zähler)
+//pv = Rechenwert pr+pz
+int rueckspeise_wert(int pr)
+{
+	int pv = 0;
+	int pabfrage = [0, 100, 300, 500, 700, 1000, 2000, 2500, 3000, 3500];
+	int pz = [0, 0, 60, 260, 600, 1060, 1600, 2130, 2870, 3000];
+	int pz_len = 10;
 
+	static int index = 0;
+
+	pv = pr + pz[index];
+
+	for (index = 0; index < pz_len; index++){	
+		if (pv > pabfrage[index] && pv <= pabfrage[index + 1])
+		{
+			return pz[index];
+		}
+	}
+}
 
 
 
