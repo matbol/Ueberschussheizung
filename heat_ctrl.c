@@ -26,15 +26,16 @@ Der Heizstab hat eine maximale Leistung von 3 kW.
 
 //WiringPI Pin 1 or GPIO 18
 #define PWM_PIN01 1
+#define PWM_PIN02 23
 #define MAX_LOAD_POWER 3000
 #define PWM_CLK 3
 #define MAIN_FREQ 192000000
 #define PWM_RANGE 1024
 #define POWER_OFFSET 300
 
-void pwm_setup(void);
-int check_heatpower (int heat);
-int heat2pwm (int heat);
+//void pwm_setup(void);
+//int check_heatpower (int heat);
+//int heat2pwm (int heat);
 //char *source = "{\"version\":\"0.3\",\"data\":{\"tuples\":[[1682965855511,468,1]],\"uuid\":\"cba86870-dd59-11ed-81fe-8b6b00f83eed\",\"from\":1682965854509,\"to\":1682965855511,\"min\":[1682965855511,468],\"max\":[1682965855511,468],\"average\":468,\"consumption\":0.13,\"rows\":2}}";
 const char * regexString =  "tuples\": \[ \[ [0-9]*, (.[0-9]*)";
 
@@ -44,6 +45,7 @@ void pwm_setup(void)
     exit (1) ;
 
   pinMode (PWM_PIN01, PWM_OUTPUT);
+  pinMode (PWM_PIN02, PWM_OUTPUT);
   pwmSetMode (PWM_MODE_MS);  //https://raspberrypi.stackexchange.com/questions/4906/control-hardware-pwm-frequency
   pwmSetClock (PWM_CLK);
   pwmSetRange (PWM_RANGE);
@@ -73,7 +75,7 @@ int check_heatpower (int heat)
 
 int heat2pwm (int heat)
 {
-  heat = check_heatpower(heat);
+//  heat = check_heatpower(heat);
   return heat * PWM_RANGE / MAX_LOAD_POWER;
 }
 
@@ -134,10 +136,16 @@ int main()
 	}
     else {
 		measured_power = extract_json(regexString, chunk.memory);
-		pwm_value = rueckspeise_wert(measured_power);
 		
-		//pwm_value = heat2pwm(measured_power);
-//		printf("Measured Power, PWM:\t%i\t%i\n\n", measured_power, pwm_value);
+		//pwm_value = rueckspeise_wert(measured_power);
+		if(measured_power < 0)
+		{
+			measured_power = -measured_power;
+		}
+//		measured_power = 500;
+		pwm_value = heat2pwm(rueckspeise_wert(measured_power));
+		pwmWrite(PWM_PIN02, heat2pwm(measured_power));
+		printf("PR,  PWM:\t%i\t%i\n\n", measured_power, pwm_value);
 		pwmWrite(PWM_PIN01, pwm_value);
 	}
 	curl_easy_cleanup(curl_handle);
@@ -163,18 +171,20 @@ int main()
 int rueckspeise_wert(int pr)
 {
 	int pv = 0;
-	int pabfrage = [0, 100, 300, 500, 700, 1000, 2000, 2500, 3000, 3500];
-	int pz = [0, 0, 60, 260, 600, 1060, 1600, 2130, 2870, 3000];
+	int pabfrage[10] = {0, 100, 300, 500, 700, 1000, 2000, 2500, 3000, 20000};
+	int pz[10] = {0, 0, 60, 260, 600, 1060, 1600, 2130, 2870, 3000};
 	int pz_len = 10;
 
 	static int index = 0;
-
+	check_heatpower(pr);
 	pv = pr + pz[index];
-
-	for (index = 0; index < pz_len; index++){	
-		if (pv > pabfrage[index] && pv <= pabfrage[index + 1])
+	
+	for (index = 1; index < pz_len; index++){
+//		printf("PV:\t%i", pv);
+		if ((pv > pabfrage[index-1]) && (pv <= pabfrage[index]))
 		{
 			return pz[index];
+		printf("Index:\t%i\npz=\t%i", index,pz[index]);
 		}
 	}
 }
